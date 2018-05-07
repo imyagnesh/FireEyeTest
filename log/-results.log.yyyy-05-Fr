@@ -1,0 +1,866 @@
+02:51:00 - info: Mongoose connected to mongodb://localhost/test
+02:53:18 - info: Mongoose disconnected
+02:53:22 - info: Mongoose connected to mongodb://localhost/test
+02:55:10 - info: Mongoose disconnected
+02:55:14 - info: Mongoose connected to mongodb://localhost/test
+02:55:16 - info: 
+02:56:10 - info: 
+02:58:12 - info: 
+02:59:15 - info: Mongoose disconnected
+02:59:19 - info: Mongoose connected to mongodb://localhost/test
+02:59:21 - info:  objectMode=false, highWaterMark=16384, head=null, tail=null, length=0, length=0, pipes=null, pipesCount=0, flowing=null, ended=false, endEmitted=false, reading=false, errorEmitted=false, sync=true, needReadable=false, emittedReadable=false, readableListening=false, resumeScheduled=false, emitClose=true, destroyed=false, defaultEncoding=utf8, awaitDrain=0, readingMore=true, decoder=null, encoding=null, readable=true, , _eventsCount=0, _maxListeners=undefined, connecting=false, _hadError=false, reading=true, $ref=$["socket"], onread=function onread(nread, buffer) {
+  var handle = this;
+  var self = handle.owner;
+  assert(handle === self._handle, 'handle != self._handle');
+
+  self._unrefTimer();
+
+  debug('onread', nread);
+
+  if (nread > 0) {
+    debug('got data');
+
+    // read success.
+    // In theory (and in practice) calling readStop right now
+    // will prevent this from being called again until _read() gets
+    // called again.
+
+    // Optimization: emit the original buffer with end points
+    var ret = self.push(buffer);
+
+    if (handle.reading && !ret) {
+      handle.reading = false;
+      debug('readStop');
+      var err = handle.readStop();
+      if (err)
+        self.destroy(errnoException(err, 'read'));
+    }
+    return;
+  }
+
+  // if we didn't get any bytes, that doesn't necessarily mean EOF.
+  // wait for the next one.
+  if (nread === 0) {
+    debug('not any data, keep waiting');
+    return;
+  }
+
+  // Error, possibly EOF.
+  if (nread !== UV_EOF) {
+    return self.destroy(errnoException(nread, 'read'));
+  }
+
+  debug('EOF');
+
+  // push a null to signal the end of data.
+  // Do it before `maybeDestroy` for correct order of events:
+  // `end` -> `close`
+  self.push(null);
+  self.read(0);
+}, onconnection=null, _consumed=true, _parent=null, _host=null, objectMode=false, highWaterMark=16384, head=null, tail=null, length=0, length=0, pipes=null, pipesCount=0, flowing=true, ended=false, endEmitted=false, reading=true, errorEmitted=false, sync=false, needReadable=true, emittedReadable=false, readableListening=false, resumeScheduled=false, emitClose=false, destroyed=false, defaultEncoding=utf8, awaitDrain=0, readingMore=false, decoder=null, encoding=null, readable=true, end=[function onReadableStreamEnd() {
+  if (!this.allowHalfOpen) {
+    this.write = writeAfterFIN;
+    if (this.writable)
+      this.end();
+  }
+  maybeDestroy(this);
+}, function () { [native code] }], drain=[function ondrain() {
+  if (this._httpMessage) this._httpMessage.emit('drain');
+}, function () { [native code] }], timeout=function socketOnTimeout() {
+  var req = this.parser && this.parser.incoming;
+  var reqTimeout = req && !req.complete && req.emit('timeout', this);
+  var res = this._httpMessage;
+  var resTimeout = res && res.emit('timeout', this);
+  var serverTimeout = this.server.emit('timeout', this);
+
+  if (!reqTimeout && !resTimeout && !serverTimeout)
+    this.destroy();
+}, data=function () { [native code] }, error=function socketOnError(e) {
+  // Ignore further errors
+  this.removeListener('error', socketOnError);
+  this.on('error', () => {});
+
+  if (!this.server.emit('clientError', e, this)) {
+    if (this.writable) {
+      this.end(badRequestResponse);
+      return;
+    }
+    this.destroy(e);
+  }
+}, close=[function () { [native code] }, function onServerResponseClose() {
+  // EventEmitter.emit makes a copy of the 'close' listeners array before
+  // calling the listeners. detachSocket() unregisters onServerResponseClose
+  // but if detachSocket() is called, directly or indirectly, by a 'close'
+  // listener, onServerResponseClose is still in that copy of the listeners
+  // array. That is, in the example below, b still gets called even though
+  // it's been removed by a:
+  //
+  //   var EventEmitter = require('events');
+  //   var obj = new EventEmitter();
+  //   obj.on('event', a);
+  //   obj.on('event', b);
+  //   function a() { obj.removeListener('event', b) }
+  //   function b() { throw "BAM!" }
+  //   obj.emit('event');  // throws
+  //
+  // Ergo, we need to deal with stale 'close' events and handle the case
+  // where the ServerResponse object has already been deconstructed.
+  // Fortunately, that requires only a single if check. :-)
+  if (this._httpMessage) this._httpMessage.emit('close');
+}], resume=function onSocketResume() {
+  // It may seem that the socket is resumed, but this is an enemy's trick to
+  // deceive us! `resume` is emitted asynchronously, and may be called from
+  // `incoming.readStart()`. Stop the socket again here, just to preserve the
+  // state.
+  //
+  // We don't care about stream semantics for the consumed socket anyway.
+  if (this._paused) {
+    this.pause();
+    return;
+  }
+
+  if (this._handle && !this._handle.reading) {
+    this._handle.reading = true;
+    this._handle.readStart();
+  }
+}, pause=function onSocketPause() {
+  if (this._handle && this._handle.reading) {
+    this._handle.reading = false;
+    this._handle.readStop();
+  }
+}, _eventsCount=8, _maxListeners=undefined, objectMode=false, highWaterMark=16384, finalCalled=false, needDrain=false, ending=false, ended=false, finished=false, destroyed=false, decodeStrings=false, defaultEncoding=utf8, length=0, writing=false, corked=0, sync=true, bufferProcessing=false, onwrite=function () { [native code] }, writecb=null, writelen=0, bufferedRequest=null, lastBufferedRequest=null, pendingcb=0, prefinished=false, errorEmitted=false, emitClose=false, bufferedRequestCount=0, next=null, entry=null, finish=function () { [native code] }, writable=true, allowHalfOpen=true, _sockname=null, _pendingData=null, _pendingEncoding=, request=function(req, res, next) {
+    app.handle(req, res, next);
+  }, connection=function connectionListener(socket) {
+  defaultTriggerAsyncIdScope(
+    getOrSetAsyncId(socket), connectionListenerInternal, this, socket
+  );
+}, _eventsCount=2, _maxListeners=undefined, _connections=1, reading=false, $ref=$["socket"]["server"], onread=null, onconnection=function onconnection(err, clientHandle) {
+  var handle = this;
+  var self = handle.owner;
+
+  debug('onconnection');
+
+  if (err) {
+    self.emit('error', errnoException(err, 'accept'));
+    return;
+  }
+
+  if (self.maxConnections && self._connections >= self.maxConnections) {
+    clientHandle.close();
+    return;
+  }
+
+  var socket = new Socket({
+    handle: clientHandle,
+    allowHalfOpen: self.allowHalfOpen,
+    pauseOnCreate: self.pauseOnConnect,
+    readable: true,
+    writable: true
+  });
+
+  self._connections++;
+  socket.server = self;
+  socket._server = self;
+
+  DTRACE_NET_SERVER_CONNECTION(socket);
+  COUNTER_NET_SERVER_CONNECTION(socket);
+  self.emit('connection', socket);
+}, _usingWorkers=false, _workers=[], _unref=false, allowHalfOpen=true, pauseOnConnect=false, httpAllowHalfOpen=false, timeout=120000, keepAliveTimeout=5000, _pendingResponseData=0, maxHeadersCount=null, _connectionKey=6::::8080, $ref=$["socket"]["server"], 0=function parserOnHeaders(headers, url) {
+  // Once we exceeded headers limit - stop collecting them
+  if (this.maxHeaderPairs <= 0 ||
+      this._headers.length < this.maxHeaderPairs) {
+    this._headers = this._headers.concat(headers);
+  }
+  this._url += url;
+}, 1=function parserOnHeadersComplete(versionMajor, versionMinor, headers, method,
+                                 url, statusCode, statusMessage, upgrade,
+                                 shouldKeepAlive) {
+  const parser = this;
+  const { socket } = parser;
+
+  if (headers === undefined) {
+    headers = parser._headers;
+    parser._headers = [];
+  }
+
+  if (url === undefined) {
+    url = parser._url;
+    parser._url = '';
+  }
+
+  // Parser is also used by http client
+  const ParserIncomingMessage = (socket && socket.server &&
+                                 socket.server[kIncomingMessage]) ||
+                                 IncomingMessage;
+
+  const incoming = parser.incoming = new ParserIncomingMessage(socket);
+  incoming.httpVersionMajor = versionMajor;
+  incoming.httpVersionMinor = versionMinor;
+  incoming.httpVersion = `${versionMajor}.${versionMinor}`;
+  incoming.url = url;
+  incoming.upgrade = upgrade;
+
+  var n = headers.length;
+
+  // If parser.maxHeaderPairs <= 0 assume that there's no limit.
+  if (parser.maxHeaderPairs > 0)
+    n = Math.min(n, parser.maxHeaderPairs);
+
+  incoming._addHeaderLines(headers, n);
+
+  if (typeof method === 'number') {
+    // server only
+    incoming.method = methods[method];
+  } else {
+    // client only
+    incoming.statusCode = statusCode;
+    incoming.statusMessage = statusMessage;
+  }
+
+  return parser.onIncoming(incoming, shouldKeepAlive);
+}, 2=function parserOnBody(b, start, len) {
+  const stream = this.incoming;
+
+  // if the stream has already been removed, then drop it.
+  if (stream === null)
+    return;
+
+  // pretend this was the result of a stream._read call.
+  if (len > 0 && !stream._dumped) {
+    var slice = b.slice(start, start + len);
+    var ret = stream.push(slice);
+    if (!ret)
+      readStop(this.socket);
+  }
+}, 3=function parserOnMessageComplete() {
+  const parser = this;
+  const stream = parser.incoming;
+
+  if (stream !== null) {
+    stream.complete = true;
+    // Emit any trailing headers.
+    const headers = parser._headers;
+    if (headers.length) {
+      stream._addHeaderLines(headers, headers.length);
+      parser._headers = [];
+      parser._url = '';
+    }
+
+    // For emit end event
+    stream.push(null);
+  }
+
+  // force to read the next incoming message
+  readStart(parser.socket);
+}, 4=function () { [native code] }, _headers=[], _url=, _consumed=true, $ref=$["socket"], $ref=$, outgoing=null, maxHeaderPairs=2000, onIncoming=function () { [native code] }, on=function socketOnWrap(ev, fn) {
+  var res = net.Socket.prototype.on.call(this, ev, fn);
+  if (!this.parser) {
+    this.on = net.Socket.prototype.on;
+    return res;
+  }
+
+  if (ev === 'data' || ev === 'readable')
+    unconsume(this.parser, this);
+
+  return res;
+}, _paused=false, finish=function () { [native code] }, _eventsCount=1, _maxListeners=undefined, output=[], outputEncodings=[], outputCallbacks=[], outputSize=0, writable=true, _last=false, chunkedEncoding=false, shouldKeepAlive=true, useChunkedEncodingByDefault=true, sendDate=true, _removedConnection=false, _removedContLen=false, _removedTE=false, _contentLength=null, _hasBody=true, _trailer=, finished=false, _headerSent=false, $ref=$["socket"], $ref=$["socket"], _header=null, _onPendingData=function () { [native code] }, _sent100=false, _expect_continue=false, $ref=$, , $ref=$["socket"], httpVersionMajor=1, httpVersionMinor=1, httpVersion=1.1, complete=false, host=localhost:8080, connection=keep-alive, content-length=26, user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36, cache-control=no-cache, origin=chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop, postman-token=e0d3cdff-acfd-f559-93c4-5132a32207be, content-type=application/json, accept=*/*, accept-encoding=gzip, deflate, br, accept-language=en-GB,en-US;q=0.9,en;q=0.8, rawHeaders=[Host, localhost:8080, Connection, keep-alive, Content-Length, 26, User-Agent, Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36, Cache-Control, no-cache, Origin, chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop, Postman-Token, e0d3cdff-acfd-f559-93c4-5132a32207be, Content-Type, application/json, Accept, */*, Accept-Encoding, gzip, deflate, br, Accept-Language, en-GB,en-US;q=0.9,en;q=0.8], , rawTrailers=[], upgrade=false, url=/addUser, method=POST, statusCode=null, statusMessage=null, $ref=$["socket"], _consuming=false, _dumped=false, next=function next(err) {
+    var layerError = err === 'route'
+      ? null
+      : err;
+
+    // remove added slash
+    if (slashAdded) {
+      req.url = req.url.substr(1);
+      slashAdded = false;
+    }
+
+    // restore altered req.url
+    if (removed.length !== 0) {
+      req.baseUrl = parentUrl;
+      req.url = protohost + removed + req.url.substr(protohost.length);
+      removed = '';
+    }
+
+    // signal to exit router
+    if (layerError === 'router') {
+      setImmediate(done, null)
+      return
+    }
+
+    // no more matching layers
+    if (idx >= stack.length) {
+      setImmediate(done, layerError);
+      return;
+    }
+
+    // get pathname of request
+    var path = getPathname(req);
+
+    if (path == null) {
+      return done(layerError);
+    }
+
+    // find next matching layer
+    var layer;
+    var match;
+    var route;
+
+    while (match !== true && idx < stack.length) {
+      layer = stack[idx++];
+      match = matchLayer(layer, path);
+      route = layer.route;
+
+      if (typeof match !== 'boolean') {
+        // hold on to layerError
+        layerError = layerError || match;
+      }
+
+      if (match !== true) {
+        continue;
+      }
+
+      if (!route) {
+        // process non-route handlers normally
+        continue;
+      }
+
+      if (layerError) {
+        // routes do not match with a pending error
+        match = false;
+        continue;
+      }
+
+      var method = req.method;
+      var has_method = route._handles_method(method);
+
+      // build up automatic options response
+      if (!has_method && method === 'OPTIONS') {
+        appendMethods(options, route._options());
+      }
+
+      // don't even bother matching route
+      if (!has_method && method !== 'HEAD') {
+        match = false;
+        continue;
+      }
+    }
+
+    // no match
+    if (match !== true) {
+      return done(layerError);
+    }
+
+    // store route for dispatch on change
+    if (route) {
+      req.route = route;
+    }
+
+    // Capture one-time layer values
+    req.params = self.mergeParams
+      ? mergeParams(layer.params, parentParams)
+      : layer.params;
+    var layerPath = layer.path;
+
+    // this should be done for the layer
+    self.process_params(layer, paramcalled, req, res, function (err) {
+      if (err) {
+        return next(layerError || err);
+      }
+
+      if (route) {
+        return layer.handle_request(req, res, next);
+      }
+
+      trim_prefix(layer, layerError, layerPath, path);
+    });
+  }, baseUrl=/api, originalUrl=/api/addUser, protocol=null, slashes=null, auth=null, host=null, port=null, hostname=null, hash=null, search=null, query=null, pathname=/addUser, path=/addUser, href=/addUser, _raw=/addUser, , , $ref=$["socket"]["_httpMessage"], path=/addUser, stack=[handle=(req, res, next) => {
+    logger.info(req);
+    const user = {
+        username: req.body.username
+    }
+    save(user, res);
+}, name=<anonymous>, params=undefined, path=undefined, keys=[], fast_star=false, fast_slash=false, method=post], post=true
+03:00:32 - info: Mongoose disconnected
+03:00:35 - info: Mongoose connected to mongodb://localhost/test
+03:00:38 - info:  objectMode=false, highWaterMark=16384, head=null, tail=null, length=0, length=0, pipes=null, pipesCount=0, flowing=true, ended=true, endEmitted=true, reading=false, errorEmitted=false, sync=false, needReadable=false, emittedReadable=false, readableListening=false, resumeScheduled=false, emitClose=true, destroyed=false, defaultEncoding=utf8, awaitDrain=0, readingMore=false, decoder=null, encoding=null, readable=false, , _eventsCount=0, _maxListeners=undefined, connecting=false, _hadError=false, reading=true, $ref=$["socket"], onread=function onread(nread, buffer) {
+  var handle = this;
+  var self = handle.owner;
+  assert(handle === self._handle, 'handle != self._handle');
+
+  self._unrefTimer();
+
+  debug('onread', nread);
+
+  if (nread > 0) {
+    debug('got data');
+
+    // read success.
+    // In theory (and in practice) calling readStop right now
+    // will prevent this from being called again until _read() gets
+    // called again.
+
+    // Optimization: emit the original buffer with end points
+    var ret = self.push(buffer);
+
+    if (handle.reading && !ret) {
+      handle.reading = false;
+      debug('readStop');
+      var err = handle.readStop();
+      if (err)
+        self.destroy(errnoException(err, 'read'));
+    }
+    return;
+  }
+
+  // if we didn't get any bytes, that doesn't necessarily mean EOF.
+  // wait for the next one.
+  if (nread === 0) {
+    debug('not any data, keep waiting');
+    return;
+  }
+
+  // Error, possibly EOF.
+  if (nread !== UV_EOF) {
+    return self.destroy(errnoException(nread, 'read'));
+  }
+
+  debug('EOF');
+
+  // push a null to signal the end of data.
+  // Do it before `maybeDestroy` for correct order of events:
+  // `end` -> `close`
+  self.push(null);
+  self.read(0);
+}, onconnection=null, _consumed=true, _parent=null, _host=null, objectMode=false, highWaterMark=16384, head=null, tail=null, length=0, length=0, pipes=null, pipesCount=0, flowing=true, ended=false, endEmitted=false, reading=true, errorEmitted=false, sync=false, needReadable=true, emittedReadable=false, readableListening=false, resumeScheduled=false, emitClose=false, destroyed=false, defaultEncoding=utf8, awaitDrain=0, readingMore=false, decoder=null, encoding=null, readable=true, end=[function onReadableStreamEnd() {
+  if (!this.allowHalfOpen) {
+    this.write = writeAfterFIN;
+    if (this.writable)
+      this.end();
+  }
+  maybeDestroy(this);
+}, function () { [native code] }], drain=[function ondrain() {
+  if (this._httpMessage) this._httpMessage.emit('drain');
+}, function () { [native code] }], timeout=function socketOnTimeout() {
+  var req = this.parser && this.parser.incoming;
+  var reqTimeout = req && !req.complete && req.emit('timeout', this);
+  var res = this._httpMessage;
+  var resTimeout = res && res.emit('timeout', this);
+  var serverTimeout = this.server.emit('timeout', this);
+
+  if (!reqTimeout && !resTimeout && !serverTimeout)
+    this.destroy();
+}, data=function () { [native code] }, error=function socketOnError(e) {
+  // Ignore further errors
+  this.removeListener('error', socketOnError);
+  this.on('error', () => {});
+
+  if (!this.server.emit('clientError', e, this)) {
+    if (this.writable) {
+      this.end(badRequestResponse);
+      return;
+    }
+    this.destroy(e);
+  }
+}, close=[function () { [native code] }, function onServerResponseClose() {
+  // EventEmitter.emit makes a copy of the 'close' listeners array before
+  // calling the listeners. detachSocket() unregisters onServerResponseClose
+  // but if detachSocket() is called, directly or indirectly, by a 'close'
+  // listener, onServerResponseClose is still in that copy of the listeners
+  // array. That is, in the example below, b still gets called even though
+  // it's been removed by a:
+  //
+  //   var EventEmitter = require('events');
+  //   var obj = new EventEmitter();
+  //   obj.on('event', a);
+  //   obj.on('event', b);
+  //   function a() { obj.removeListener('event', b) }
+  //   function b() { throw "BAM!" }
+  //   obj.emit('event');  // throws
+  //
+  // Ergo, we need to deal with stale 'close' events and handle the case
+  // where the ServerResponse object has already been deconstructed.
+  // Fortunately, that requires only a single if check. :-)
+  if (this._httpMessage) this._httpMessage.emit('close');
+}], resume=function onSocketResume() {
+  // It may seem that the socket is resumed, but this is an enemy's trick to
+  // deceive us! `resume` is emitted asynchronously, and may be called from
+  // `incoming.readStart()`. Stop the socket again here, just to preserve the
+  // state.
+  //
+  // We don't care about stream semantics for the consumed socket anyway.
+  if (this._paused) {
+    this.pause();
+    return;
+  }
+
+  if (this._handle && !this._handle.reading) {
+    this._handle.reading = true;
+    this._handle.readStart();
+  }
+}, pause=function onSocketPause() {
+  if (this._handle && this._handle.reading) {
+    this._handle.reading = false;
+    this._handle.readStop();
+  }
+}, _eventsCount=8, _maxListeners=undefined, objectMode=false, highWaterMark=16384, finalCalled=false, needDrain=false, ending=false, ended=false, finished=false, destroyed=false, decodeStrings=false, defaultEncoding=utf8, length=0, writing=false, corked=0, sync=true, bufferProcessing=false, onwrite=function () { [native code] }, writecb=null, writelen=0, bufferedRequest=null, lastBufferedRequest=null, pendingcb=0, prefinished=false, errorEmitted=false, emitClose=false, bufferedRequestCount=0, next=null, entry=null, finish=function () { [native code] }, writable=true, allowHalfOpen=true, _sockname=null, _pendingData=null, _pendingEncoding=, request=function(req, res, next) {
+    app.handle(req, res, next);
+  }, connection=function connectionListener(socket) {
+  defaultTriggerAsyncIdScope(
+    getOrSetAsyncId(socket), connectionListenerInternal, this, socket
+  );
+}, _eventsCount=2, _maxListeners=undefined, _connections=1, reading=false, $ref=$["socket"]["server"], onread=null, onconnection=function onconnection(err, clientHandle) {
+  var handle = this;
+  var self = handle.owner;
+
+  debug('onconnection');
+
+  if (err) {
+    self.emit('error', errnoException(err, 'accept'));
+    return;
+  }
+
+  if (self.maxConnections && self._connections >= self.maxConnections) {
+    clientHandle.close();
+    return;
+  }
+
+  var socket = new Socket({
+    handle: clientHandle,
+    allowHalfOpen: self.allowHalfOpen,
+    pauseOnCreate: self.pauseOnConnect,
+    readable: true,
+    writable: true
+  });
+
+  self._connections++;
+  socket.server = self;
+  socket._server = self;
+
+  DTRACE_NET_SERVER_CONNECTION(socket);
+  COUNTER_NET_SERVER_CONNECTION(socket);
+  self.emit('connection', socket);
+}, _usingWorkers=false, _workers=[], _unref=false, allowHalfOpen=true, pauseOnConnect=false, httpAllowHalfOpen=false, timeout=120000, keepAliveTimeout=5000, _pendingResponseData=0, maxHeadersCount=null, _connectionKey=6::::8080, $ref=$["socket"]["server"], 0=function parserOnHeaders(headers, url) {
+  // Once we exceeded headers limit - stop collecting them
+  if (this.maxHeaderPairs <= 0 ||
+      this._headers.length < this.maxHeaderPairs) {
+    this._headers = this._headers.concat(headers);
+  }
+  this._url += url;
+}, 1=function parserOnHeadersComplete(versionMajor, versionMinor, headers, method,
+                                 url, statusCode, statusMessage, upgrade,
+                                 shouldKeepAlive) {
+  const parser = this;
+  const { socket } = parser;
+
+  if (headers === undefined) {
+    headers = parser._headers;
+    parser._headers = [];
+  }
+
+  if (url === undefined) {
+    url = parser._url;
+    parser._url = '';
+  }
+
+  // Parser is also used by http client
+  const ParserIncomingMessage = (socket && socket.server &&
+                                 socket.server[kIncomingMessage]) ||
+                                 IncomingMessage;
+
+  const incoming = parser.incoming = new ParserIncomingMessage(socket);
+  incoming.httpVersionMajor = versionMajor;
+  incoming.httpVersionMinor = versionMinor;
+  incoming.httpVersion = `${versionMajor}.${versionMinor}`;
+  incoming.url = url;
+  incoming.upgrade = upgrade;
+
+  var n = headers.length;
+
+  // If parser.maxHeaderPairs <= 0 assume that there's no limit.
+  if (parser.maxHeaderPairs > 0)
+    n = Math.min(n, parser.maxHeaderPairs);
+
+  incoming._addHeaderLines(headers, n);
+
+  if (typeof method === 'number') {
+    // server only
+    incoming.method = methods[method];
+  } else {
+    // client only
+    incoming.statusCode = statusCode;
+    incoming.statusMessage = statusMessage;
+  }
+
+  return parser.onIncoming(incoming, shouldKeepAlive);
+}, 2=function parserOnBody(b, start, len) {
+  const stream = this.incoming;
+
+  // if the stream has already been removed, then drop it.
+  if (stream === null)
+    return;
+
+  // pretend this was the result of a stream._read call.
+  if (len > 0 && !stream._dumped) {
+    var slice = b.slice(start, start + len);
+    var ret = stream.push(slice);
+    if (!ret)
+      readStop(this.socket);
+  }
+}, 3=function parserOnMessageComplete() {
+  const parser = this;
+  const stream = parser.incoming;
+
+  if (stream !== null) {
+    stream.complete = true;
+    // Emit any trailing headers.
+    const headers = parser._headers;
+    if (headers.length) {
+      stream._addHeaderLines(headers, headers.length);
+      parser._headers = [];
+      parser._url = '';
+    }
+
+    // For emit end event
+    stream.push(null);
+  }
+
+  // force to read the next incoming message
+  readStart(parser.socket);
+}, 4=function () { [native code] }, _headers=[], _url=, _consumed=true, $ref=$["socket"], $ref=$, outgoing=null, maxHeaderPairs=2000, onIncoming=function () { [native code] }, on=function socketOnWrap(ev, fn) {
+  var res = net.Socket.prototype.on.call(this, ev, fn);
+  if (!this.parser) {
+    this.on = net.Socket.prototype.on;
+    return res;
+  }
+
+  if (ev === 'data' || ev === 'readable')
+    unconsume(this.parser, this);
+
+  return res;
+}, _paused=false, finish=function () { [native code] }, _eventsCount=1, _maxListeners=undefined, output=[], outputEncodings=[], outputCallbacks=[], outputSize=0, writable=true, _last=false, chunkedEncoding=false, shouldKeepAlive=true, useChunkedEncodingByDefault=true, sendDate=true, _removedConnection=false, _removedContLen=false, _removedTE=false, _contentLength=null, _hasBody=true, _trailer=, finished=false, _headerSent=false, $ref=$["socket"], $ref=$["socket"], _header=null, _onPendingData=function () { [native code] }, _sent100=false, _expect_continue=false, $ref=$, , $ref=$["socket"], httpVersionMajor=1, httpVersionMinor=1, httpVersion=1.1, complete=true, host=localhost:8080, connection=keep-alive, content-length=26, user-agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36, cache-control=no-cache, origin=chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop, postman-token=1d5df558-b8b8-cb8f-e5ed-5aaf56b3ac69, content-type=application/json, accept=*/*, accept-encoding=gzip, deflate, br, accept-language=en-GB,en-US;q=0.9,en;q=0.8, rawHeaders=[Host, localhost:8080, Connection, keep-alive, Content-Length, 26, User-Agent, Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36, Cache-Control, no-cache, Origin, chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop, Postman-Token, 1d5df558-b8b8-cb8f-e5ed-5aaf56b3ac69, Content-Type, application/json, Accept, */*, Accept-Encoding, gzip, deflate, br, Accept-Language, en-GB,en-US;q=0.9,en;q=0.8], , rawTrailers=[], upgrade=false, url=/addUser, method=POST, statusCode=null, statusMessage=null, $ref=$["socket"], _consuming=true, _dumped=false, next=function next(err) {
+    var layerError = err === 'route'
+      ? null
+      : err;
+
+    // remove added slash
+    if (slashAdded) {
+      req.url = req.url.substr(1);
+      slashAdded = false;
+    }
+
+    // restore altered req.url
+    if (removed.length !== 0) {
+      req.baseUrl = parentUrl;
+      req.url = protohost + removed + req.url.substr(protohost.length);
+      removed = '';
+    }
+
+    // signal to exit router
+    if (layerError === 'router') {
+      setImmediate(done, null)
+      return
+    }
+
+    // no more matching layers
+    if (idx >= stack.length) {
+      setImmediate(done, layerError);
+      return;
+    }
+
+    // get pathname of request
+    var path = getPathname(req);
+
+    if (path == null) {
+      return done(layerError);
+    }
+
+    // find next matching layer
+    var layer;
+    var match;
+    var route;
+
+    while (match !== true && idx < stack.length) {
+      layer = stack[idx++];
+      match = matchLayer(layer, path);
+      route = layer.route;
+
+      if (typeof match !== 'boolean') {
+        // hold on to layerError
+        layerError = layerError || match;
+      }
+
+      if (match !== true) {
+        continue;
+      }
+
+      if (!route) {
+        // process non-route handlers normally
+        continue;
+      }
+
+      if (layerError) {
+        // routes do not match with a pending error
+        match = false;
+        continue;
+      }
+
+      var method = req.method;
+      var has_method = route._handles_method(method);
+
+      // build up automatic options response
+      if (!has_method && method === 'OPTIONS') {
+        appendMethods(options, route._options());
+      }
+
+      // don't even bother matching route
+      if (!has_method && method !== 'HEAD') {
+        match = false;
+        continue;
+      }
+    }
+
+    // no match
+    if (match !== true) {
+      return done(layerError);
+    }
+
+    // store route for dispatch on change
+    if (route) {
+      req.route = route;
+    }
+
+    // Capture one-time layer values
+    req.params = self.mergeParams
+      ? mergeParams(layer.params, parentParams)
+      : layer.params;
+    var layerPath = layer.path;
+
+    // this should be done for the layer
+    self.process_params(layer, paramcalled, req, res, function (err) {
+      if (err) {
+        return next(layerError || err);
+      }
+
+      if (route) {
+        return layer.handle_request(req, res, next);
+      }
+
+      trim_prefix(layer, layerError, layerPath, path);
+    });
+  }, baseUrl=/api, originalUrl=/api/addUser, protocol=null, slashes=null, auth=null, host=null, port=null, hostname=null, hash=null, search=null, query=null, pathname=/addUser, path=/addUser, href=/addUser, _raw=/addUser, , , $ref=$["socket"]["_httpMessage"], username=yagnesh, _body=true, length=undefined, path=/addUser, stack=[handle=(req, res, next) => {
+    logger.info(req);
+    const user = {
+        username: req.body.username
+    }
+    save(user, res);
+}, name=<anonymous>, params=undefined, path=undefined, keys=[], fast_star=false, fast_slash=false, method=post], post=true
+03:03:27 - info: Mongoose disconnected
+03:03:30 - info: Mongoose connected to mongodb://localhost/test
+03:03:34 - info: yagnesh
+03:03:59 - info: yagnesh
+03:08:14 - info: Mongoose disconnected
+03:08:18 - info: Mongoose connected to mongodb://localhost/test
+03:08:34 - info: 
+03:08:50 - info:  0=1, 1=2, 2=3
+03:10:16 - info: Mongoose disconnected
+03:10:20 - info: Mongoose connected to mongodb://localhost/test
+03:20:52 - info: Mongoose disconnected
+03:20:56 - info: Mongoose connected to mongodb://localhost/test
+03:23:14 - info: Mongoose disconnected
+03:23:17 - info: Mongoose connected to mongodb://localhost/test
+03:25:57 - info: Mongoose disconnected
+03:26:36 - info: Mongoose connected to mongodb://localhost/test
+03:32:45 - info: Mongoose connected to mongodb://localhost/test
+03:37:41 - info: Mongoose disconnected
+03:38:08 - info: Mongoose connected to mongodb://localhost/test
+03:59:21 - info: Mongoose disconnected
+03:59:24 - info: Mongoose connected to mongodb://localhost/test
+04:10:13 - info: Mongoose disconnected
+04:10:16 - info: Mongoose connected to mongodb://localhost/test
+04:10:31 - info: Mongoose disconnected
+04:10:34 - info: Mongoose connected to mongodb://localhost/test
+04:24:39 - info: Mongoose disconnected
+04:24:43 - info: Mongoose connected to mongodb://localhost/test
+04:25:06 - info: 
+04:25:34 - info: Mongoose disconnected
+04:25:37 - info: Mongoose connected to mongodb://localhost/test
+04:25:41 - info: [{"sequence":[2,3,4],"_id":"5aec39c7c892420ef098c388","__v":0},{"sequence":[4,5,7],"_id":"5aec40cac3a5430f2c9927f0","__v":0}]
+04:26:44 - info: Mongoose disconnected
+04:26:47 - info: Mongoose connected to mongodb://localhost/test
+04:26:54 - info: [2,3,4]
+04:26:54 - info: [4,5,7]
+04:30:30 - info: Mongoose disconnected
+04:30:33 - info: Mongoose connected to mongodb://localhost/test
+04:30:39 - info: [2,3,4]
+04:30:39 - info: [4,5,7]
+04:42:44 - info: Mongoose connected to mongodb://localhost/test
+04:43:15 - info: Mongoose connected to mongodb://localhost/test
+04:43:38 - info: Mongoose connected to mongodb://localhost/test
+04:43:44 - info:  strictMode=true, clickOn=1, shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=111, 4=130, 5=4, 6=107, 7=20, 8=168, 9=12, 10=164, 11=192, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , stateNames=[require, modify, init, default, ignore], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[0]["$__"]["_id"], clickOn=39, $init=true, strictMode=true, $ref=$[0]["$__"]["selected"], shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=86, 4=231, 5=208, 6=44, 7=21, 8=52, 9=214, 10=198, 11=88, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , $ref=$[0]["$__"]["activePaths"]["stateNames"], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[1]["$__"]["_id"], clickOn=38, $init=true, strictMode=true, $ref=$[0]["$__"]["selected"], shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=59, 4=126, 5=98, 6=46, 7=14, 8=200, 9=221, 10=139, 11=56, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , $ref=$[0]["$__"]["activePaths"]["stateNames"], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[2]["$__"]["_id"], clickOn=23, $init=true
+04:43:45 - info:  strictMode=true, clickOn=1, shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=111, 4=130, 5=4, 6=107, 7=20, 8=168, 9=12, 10=164, 11=192, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , stateNames=[require, modify, init, default, ignore], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[0]["$__"]["_id"], clickOn=39, $init=true, strictMode=true, $ref=$[0]["$__"]["selected"], shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=86, 4=231, 5=208, 6=44, 7=21, 8=52, 9=214, 10=198, 11=88, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , $ref=$[0]["$__"]["activePaths"]["stateNames"], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[1]["$__"]["_id"], clickOn=38, $init=true, strictMode=true, $ref=$[0]["$__"]["selected"], shardval=undefined, saveError=undefined, validationError=undefined, adhocPaths=undefined, removing=undefined, inserting=undefined, version=undefined, , _bsontype=ObjectID, 0=90, 1=236, 2=71, 3=59, 4=126, 5=98, 6=46, 7=14, 8=200, 9=221, 10=139, 11=56, populate=undefined, populated=undefined, wasPopulated=false, scope=undefined, _id=init, clickOn=init, , , _id=true, clickOn=true, , , $ref=$[0]["$__"]["activePaths"]["stateNames"], , ownerDocument=undefined, fullPath=undefined, , _eventsCount=0, _maxListeners=0, skipId=true, isNew=false, isNew=false, errors=undefined, $ref=$[2]["$__"]["_id"], clickOn=23, $init=true
+04:45:37 - info: Mongoose disconnected
+04:45:40 - info: Mongoose connected to mongodb://localhost/test
+04:45:46 - info: [{"_id":"5aec47e9e4e05d1b14ca5f2f","clickOn":38},{"_id":"5aec476f82046b14a80ca4c0","clickOn":39},{"_id":"5aec4756e7d02c1534d6c658","clickOn":38}]
+04:45:46 - info: [{"_id":"5aec47e9e4e05d1b14ca5f2f","clickOn":38},{"_id":"5aec476f82046b14a80ca4c0","clickOn":39},{"_id":"5aec4756e7d02c1534d6c658","clickOn":38}]
+04:49:20 - info: Mongoose disconnected
+04:49:23 - info: Mongoose connected to mongodb://localhost/test
+04:50:26 - info: Mongoose connected to mongodb://localhost/test
+04:51:44 - info: Mongoose connected to mongodb://localhost/test
+04:51:48 - info: [{"_id":"5aec4953aa33cb1e184d1e9c","clickOn":30},{"_id":"5aec4904f2d1801290cdc9ed","clickOn":31},{"_id":"5aec48cb3b62bc1c282ffc70","clickOn":31}]
+04:51:48 - info: [{"_id":"5aec4953aa33cb1e184d1e9c","clickOn":30},{"_id":"5aec4904f2d1801290cdc9ed","clickOn":31},{"_id":"5aec48cb3b62bc1c282ffc70","clickOn":31}]
+04:52:04 - info: Mongoose disconnected
+04:52:07 - info: Mongoose connected to mongodb://localhost/test
+04:52:11 - info: [{"_id":"5aec496a1782bd13aca7db98","clickOn":39},{"_id":"5aec4953aa33cb1e184d1e9c","clickOn":30},{"_id":"5aec4904f2d1801290cdc9ed","clickOn":31}]
+04:52:11 - info: [{"_id":"5aec496a1782bd13aca7db98","clickOn":39},{"_id":"5aec4953aa33cb1e184d1e9c","clickOn":30},{"_id":"5aec4904f2d1801290cdc9ed","clickOn":31}]
+04:53:01 - info: Mongoose disconnected
+04:53:05 - info: Mongoose connected to mongodb://localhost/test
+04:53:09 - info: [{"clickOn":22},{"clickOn":39},{"clickOn":30}]
+04:53:09 - info: [{"clickOn":22},{"clickOn":39},{"clickOn":30}]
+04:53:56 - info: [{"clickOn":38},{"clickOn":22},{"clickOn":39}]
+04:53:56 - info: [{"clickOn":38},{"clickOn":22},{"clickOn":39}]
+04:54:16 - info: [{"clickOn":1},{"clickOn":38},{"clickOn":22}]
+04:54:16 - info: [{"clickOn":1},{"clickOn":38},{"clickOn":22}]
+04:55:53 - info: Mongoose disconnected
+04:55:56 - info: Mongoose connected to mongodb://localhost/test
+04:56:04 - info: [{"clickOn":38},{"clickOn":1},{"clickOn":64}]
+04:56:04 - info: [{"clickOn":38},{"clickOn":1},{"clickOn":64}]
+04:57:33 - info: Mongoose disconnected
+04:57:48 - info: Mongoose connected to mongodb://localhost/test
+04:57:55 - info: [1,64,2]
+04:57:55 - info: [1,64,2]
+05:10:52 - info: Mongoose disconnected
+05:10:56 - info: Mongoose connected to mongodb://localhost/test
+05:11:04 - info: [64,2,29]
+05:11:04 - info: [64,2,29]
+05:11:16 - info: Mongoose disconnected
+05:11:19 - info: Mongoose connected to mongodb://localhost/test
+05:11:24 - info: [{"username":"test4","clickOn":2,"clickTime":"2018-05-04T11:57:53.948Z"},{"username":"test4","clickOn":29,"clickTime":"2018-05-04T12:11:03.212Z"},{"username":"test4","clickOn":38,"clickTime":"2018-05-04T12:11:22.939Z"}]
+05:11:24 - info: [{"username":"test4","clickOn":2,"clickTime":"2018-05-04T11:57:53.948Z"},{"username":"test4","clickOn":29,"clickTime":"2018-05-04T12:11:03.212Z"},{"username":"test4","clickOn":38,"clickTime":"2018-05-04T12:11:22.939Z"}]
+05:13:26 - info: [{"username":"test4","clickOn":29,"clickTime":"2018-05-04T12:11:03.212Z"},{"username":"test4","clickOn":38,"clickTime":"2018-05-04T12:11:22.939Z"},{"username":"yagnesh","clickOn":59,"clickTime":"2018-05-04T12:13:26.053Z"}]
+05:13:26 - info: [{"username":"test4","clickOn":29,"clickTime":"2018-05-04T12:11:03.212Z"},{"username":"test4","clickOn":38,"clickTime":"2018-05-04T12:11:22.939Z"},{"username":"yagnesh","clickOn":59,"clickTime":"2018-05-04T12:13:26.053Z"}]
+05:13:26 - info: [{"username":"test4","clickOn":29,"clickTime":"2018-05-04T12:11:03.212Z"},{"username":"test4","clickOn":38,"clickTime":"2018-05-04T12:11:22.939Z"},{"username":"yagnesh","clickOn":59,"clickTime":"2018-05-04T12:13:26.053Z"}]
+05:18:14 - info: Mongoose disconnected
+05:18:17 - info: Mongoose connected to mongodb://localhost/test
+05:18:20 - info: Mongoose disconnected
+05:18:23 - info: Mongoose connected to mongodb://localhost/test
+05:18:43 - info: match last info
+05:19:21 - info: match last info
+05:19:32 - info: match last info
+05:20:38 - info: match last info
+05:22:58 - info: match last info
+05:23:37 - info: match last info
+21:36:06 - info: Mongoose connected to mongodb://localhost/test
+22:17:47 - info: Mongoose disconnected
+22:17:54 - info: Mongoose connected to mongodb://localhost/test
+22:49:06 - info: Mongoose disconnected
+22:52:35 - info: Mongoose connected to mongodb://localhost/test
+22:54:01 - info: Mongoose disconnected
+22:54:04 - info: Mongoose connected to mongodb://localhost/test
+22:57:16 - info: Mongoose disconnected
+22:57:19 - info: Mongoose connected to mongodb://localhost/test
+23:13:18 - info: Mongoose disconnected
+23:13:20 - info: Mongoose connected to mongodb://localhost/test
+23:42:45 - info: Mongoose disconnected
+23:42:48 - info: Mongoose connected to mongodb://localhost/test
+23:46:17 - info: Mongoose disconnected
+23:46:19 - info: Mongoose connected to mongodb://localhost/test
